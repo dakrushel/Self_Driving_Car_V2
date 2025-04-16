@@ -3,6 +3,7 @@ import threading
 
 from GUI.Joystick import OnScreenJoystick
 from Controllers.MotorController import process_command as motor_run_command
+from Controllers.ServoController import set_angle as set_servo_angle, outputToDashboard as servo_dashboard
 
 # Import dashboards and sensor threads
 try:
@@ -41,7 +42,6 @@ class DarkGUI:
         self.button_bg = "#333333"
         self.button_active_bg = "#555555"
 
-        # --- Layout Frames ---
         self.frame_motor = self.create_labeled_frame("Motor Controls", x=20, y=20, w=380, h=300)
         self.frame_sensors = self.create_labeled_frame("Sensors", x=420, y=20, w=360, h=300)
         self.frame_camera = self.create_labeled_frame("Camera", x=800, y=20, w=380, h=300)
@@ -52,11 +52,11 @@ class DarkGUI:
         self.build_sensor_display()
         self.build_camera_controls()
         self.build_joystick()
+        self.build_servo_slider()
 
         self.start_threads()
         self.update_gui()
 
-        # Keyboard fallback
         self.root.bind("<Up>", lambda e: motor_run_command("forward"))
         self.root.bind("<Down>", lambda e: motor_run_command("backward"))
         self.root.bind("<Left>", lambda e: motor_run_command("left"))
@@ -76,22 +76,11 @@ class DarkGUI:
         return frame
 
     def build_motor_controls(self):
-        tk.Button(self.frame_motor, text="Forward", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("forward")).pack(pady=5)
-        tk.Button(self.frame_motor, text="Backward", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("backward")).pack(pady=5)
-        tk.Button(self.frame_motor, text="Left", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("left")).pack(pady=5)
-        tk.Button(self.frame_motor, text="Right", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("right")).pack(pady=5)
-        tk.Button(self.frame_motor, text="Stop", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("stop")).pack(pady=5)
-        tk.Button(self.frame_motor, text="High Speed", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("high")).pack(pady=5)
-        tk.Button(self.frame_motor, text="Medium Speed", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("medium")).pack(pady=5)
-        tk.Button(self.frame_motor, text="Low Speed", font=self.font_main, bg=self.button_bg, fg=self.fg_color,
-                  command=lambda: motor_run_command("low")).pack(pady=5)
+        commands = ["Forward", "Backward", "Left", "Right", "Stop", "High Speed", "Medium Speed", "Low Speed"]
+        actions = ["forward", "backward", "left", "right", "stop", "high", "medium", "low"]
+        for label, cmd in zip(commands, actions):
+            tk.Button(self.frame_motor, text=label, font=self.font_main, bg=self.button_bg, fg=self.fg_color,
+                      command=lambda c=cmd: motor_run_command(c)).pack(pady=5)
 
     def build_sensor_display(self):
         self.sensor_text = tk.Text(self.frame_sensors, bg=self.bg_color, fg=self.fg_color, font=self.font_main, height=12)
@@ -124,6 +113,19 @@ class DarkGUI:
             canvas_w // 2, 20, text="Joystick: STOP",
             fill="#fff", font=self.font_main
         )
+
+    def build_servo_slider(self):
+        self.servo_slider = tk.Scale(self.frame_camera, from_=0, to=180, orient="horizontal",
+                                     label="Servo Angle", font=self.font_main,
+                                     bg=self.bg_color, fg=self.fg_color, troughcolor="#444",
+                                     highlightthickness=0, command=self.update_servo)
+        self.servo_slider.pack(pady=10)
+
+    def update_servo(self, value):
+        try:
+            set_servo_angle(int(value))
+        except:
+            pass
 
     def handle_joystick(self, dx, dy):
         direction = "stop"
@@ -175,9 +177,8 @@ class DarkGUI:
         self.sensor_text.insert(tk.END, f"Distance: {ultra_dashboard.get('distance', 0):.2f} m\n")
         self.sensor_text.insert(tk.END, f"Proximity: {ultra_dashboard.get('proximity', 'N/A')}\n")
 
-        self.sensor_text.insert(tk.END, f"\n--- Motor ---\n")
-        for wheel, stats in motor_dashboard.items():
-            self.sensor_text.insert(tk.END, f"{wheel}: {stats['direction']} @ {stats['speed']}%\n")
+        self.sensor_text.insert(tk.END, f"\n--- Servo ---\n")
+        self.sensor_text.insert(tk.END, f"Angle: {servo_dashboard.get('servo_angle', 0)}\n")
 
         self.sensor_text.insert(tk.END, f"\n--- Camera ---\n")
         self.sensor_text.insert(tk.END, f"Status: {camera_dashboard.get('camera_status', 'N/A')}\n")

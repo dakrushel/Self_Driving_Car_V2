@@ -7,12 +7,12 @@ import time
 
 # Import test scripts
 try:
-    from CameraTest import run as camera_run
-    from CameraTest import outputToDashboard as camera_dashboard
+    from TestScripts.CameraTest import run as camera_run
+    from TestScripts.CameraTest import outputToDashboard as camera_dashboard
 
-    from Gyro_AccelerometerTest import outputToDashboard as gyro_dashboard, run as gyro_run_loop
-    from UltrasonicTest import outputToDashboard as ultra_dashboard, run as ultra_run_loop
-    from MotorControllerTest import outputToDashboard as motor_dashboard
+    from Controllers.GyroAccelerometerController import outputToDashboard as gyro_dashboard, run as gyro_run_loop
+    from Controllers.UltrasonicController import outputToDashboard as ultra_dashboard, run as ultra_run_loop
+    from Controllers.MotorController import outputToDashboard as motor_dashboard
     car_status = "Connected"
 except ImportError as e:
     print("ERROR: Some hardware modules not found. This likely means you're not on a Raspberry Pi, or smbus is missing.")

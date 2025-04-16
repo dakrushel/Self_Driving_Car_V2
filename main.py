@@ -8,7 +8,7 @@ from GUI.MainWindow import DarkGUI
 try:
     from Controllers.GyroAccelerometerController import run as gyro_run_loop
     from Controllers.UltrasonicController import run as ultra_run_loop
-    from TestScripts.CameraTest import run as camera_run  # Untested
+    from Controllers.CameraController import run as camera_run  # Untested
     hardware_available = True
 except ImportError as e:
     print("[main.py] WARNING: Some hardware modules not found.")
